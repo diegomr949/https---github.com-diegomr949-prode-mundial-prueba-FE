@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prode Mundial 2026 — CPCE Mendoza</title>
+
+  <!--
+    ════════════════════════════════════════════════════════
+    CONFIGURACIÓN DE ENTORNO — EDITAR SOLO ESTE META TAG
+    ════════════════════════════════════════════════════════
+    Cambiar el content por la URL de tu backend en producción.
+    El código JS lee esta URL desde acá — sin hardcodear nada.
+
+    Desarrollo:  http://localhost:8080/api
+    Producción:  https://prode-mundial.onrender.com/api
+    ════════════════════════════════════════════════════════
+  -->
+  <meta name="api-base" content="http://localhost:8080/api" />
+
+  <!--
+    Content Security Policy — segunda línea de defensa contra XSS.
+    En producción, mover estos headers al servidor web (Nginx/Vercel)
+    para que no puedan ser modificados por el cliente.
+  -->
+  <meta http-equiv="Content-Security-Policy"
+        content="
+          default-src 'self';
+          script-src 'self' 'unsafe-inline';
+          style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+          font-src 'self' https://fonts.gstatic.com;
+          img-src 'self' data: https://flagcdn.com https://cpcemza.org.ar;
+          connect-src 'self' http://localhost:8080 https:;
+          frame-ancestors 'none';
+        " />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     LOGIN
+════════════════════════════════════════════ -->
+<div id="view-login" class="view active" style="display:none">
+  <div class="lcard">
+    <div class="lhead">
+      <img src="https://cpcemza.org.ar/img/logo.png" alt="CPCE Mendoza"
+           onerror="this.style.display='none'" />
+      <h1>PRODE MUNDIAL 2026</h1>
+      <p>Consejo Profesional de Ciencias Económicas de Mendoza</p>
+    </div>
+    <div class="lbody">
+      <div class="atabs">
+        <button class="atab active" onclick="Views.Auth.switchTab('login')">Iniciar sesión</button>
+        <button class="atab"        onclick="Views.Auth.switchTab('reg')">Registrarse</button>
+      </div>
+
+      <!-- Formulario Login -->
+      <div id="fl">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="le" placeholder="usuario@cpce.org.ar" />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="lp" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter') Views.Auth.doLogin()" />
+        </div>
+        <button class="btn-p" id="bl" onclick="Views.Auth.doLogin()">Ingresar</button>
+      </div>
+
+      <!-- Formulario Registro -->
+      <div id="fr" style="display:none">
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" id="rn" placeholder="Juan Pérez" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="re" placeholder="usuario@cpce.org.ar" />
+        </div>
+        <div class="field">
+          <label>Contraseña (mín. 6 caracteres)</label>
+          <input type="password" id="rp" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter') Views.Auth.doReg()" />
+        </div>
+        <button class="btn-p" id="br" onclick="Views.Auth.doReg()">Crear cuenta</button>
+      </div>
+    </div>
+    <div class="lfoot">Uso exclusivo para matriculados y personal del CPCE Mendoza</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TOPBAR (desktop)
+════════════════════════════════════════════ -->
+<header id="topbar" style="display:flex">
+  <a class="tb-logo" href="#" onclick="Router.go('partidos'); return false">
+    <img src="https://cpcemza.org.ar/img/logo.png" alt="CPCE Mendoza"
+         onerror="this.style.display='none'" />
+    <div class="tb-sep"></div>
+    <div class="tb-name">
+      PRODE MUNDIAL 2026
+      <small>CPCE Mendoza</small>
+    </div>
+  </a>
+
+  <nav class="tb-nav">
+    <button class="nb active" data-v="partidos" onclick="Router.go('partidos')">
+      ⚽ Fixture
+    </button>
+    <button class="nb" data-v="ranking" onclick="Router.go('ranking')">
+      📊 Ranking
+    </button>
+    <button class="nb" data-v="selecciones" onclick="Router.go('selecciones')">
+      🏳️ Selecciones
+    </button>
+    <button class="nb" data-v="perfil" onclick="Router.go('perfil')">
+      👤 Mi perfil
+    </button>
+    <button class="nb admin-nav-item" data-v="admin" onclick="Router.go('admin')" style="display:none">
+      🛡️ Admin
+    </button>
+  </nav>
+
+  <div class="tb-divider"></div>
+
+  <div class="tb-user">
+    <div class="tb-uinfo">
+      <div class="tb-uname" id="ubn">—</div>
+      <div class="tb-upts" id="ubp">0 pts</div>
+    </div>
+    <div class="tb-av" id="ubav">?</div>
+    <button class="btn-out" onclick="Auth.logout()">Salir ↩</button>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════ -->
+<main id="main" style="display:block">
+
+  <!-- ── FIXTURE ── -->
+  <div id="view-partidos" class="view">
+    <div class="wrap">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Fixture <span class="ac">Mundial 2026</span></div>
+          <div class="psub">Cargá tus predicciones antes del inicio de cada partido</div>
+        </div>
+        <div class="tabs">
+          <button class="tab active" onclick="Views.Partidos.setFilter('todos',this)">Todos</button>
+          <button class="tab" onclick="Views.Partidos.setFilter('PENDIENTE',this)">Pendientes</button>
+          <button class="tab" onclick="Views.Partidos.setFilter('EN_JUEGO',this)">En vivo</button>
+          <button class="tab" onclick="Views.Partidos.setFilter('FINALIZADO',this)">Finalizados</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="scard">
+          <div class="slabel">Mis puntos</div>
+          <div class="sval" id="sp">0</div>
+          <div class="ssub">acumulados</div>
+        </div>
+        <div class="scard accent-amber">
+          <div class="slabel">Plenos ⭐</div>
+          <div class="sval amber" id="spl">0</div>
+          <div class="ssub">resultados exactos</div>
+        </div>
+        <div class="scard">
+          <div class="slabel">Predicciones</div>
+          <div class="sval" id="spr">0</div>
+          <div class="ssub" id="sprs">de 0 partidos</div>
+        </div>
+        <div class="scard accent-navy">
+          <div class="slabel">Mi posición</div>
+          <div class="sval navy" id="spos">—</div>
+          <div class="ssub">en el ranking</div>
+        </div>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div class="prog-wrap">
+        <span class="prog-lbl" id="plbl">Cargando partidos...</span>
+        <div class="prog-bg">
+          <div class="prog-fill" id="pbar" style="width:0%"></div>
+        </div>
+        <span class="prog-pct" id="ppct">0%</span>
+      </div>
+
+      <div id="mout"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── RANKING ── -->
+  <div id="view-ranking" class="view">
+    <div class="wrap">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Tabla de <span class="ac">Posiciones</span></div>
+          <div class="psub">Clasificación general — CPCE Mendoza · Prode Mundial 2026</div>
+        </div>
+        <button class="tab active" onclick="Views.Ranking.load()">↻ Actualizar</button>
+      </div>
+      <div id="rout"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── SELECCIONES ── -->
+  <div id="view-selecciones" class="view">
+    <div class="wrap">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Selecciones <span class="ac">Participantes</span></div>
+          <div class="psub">Estadísticas en el torneo · Hacé clic en un equipo para ver el plantel</div>
+        </div>
+      </div>
+      <div id="sel-out"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── MI PERFIL ── -->
+  <div id="view-perfil" class="view">
+    <div class="wrap">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Mi <span class="ac">Perfil</span></div>
+          <div class="psub">Tus estadísticas, historial y configuración de cuenta</div>
+        </div>
+      </div>
+      <div id="perfil-out"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── ADMIN ── -->
+  <div id="view-admin" class="view">
+    <div class="wrap">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Panel <span class="ac">Administrador</span></div>
+          <div class="psub">Gestión de usuarios · Carga de resultados · Clasificación</div>
+        </div>
+      </div>
+
+      <!-- Tabs admin -->
+      <div class="atabs2">
+        <button class="atab2 active" onclick="Views.Admin.switchTab('u',this)">
+          👥 Usuarios
+        </button>
+        <button class="atab2" onclick="Views.Admin.switchTab('r',this)">
+          ⚽ Cargar Resultados
+        </button>
+      </div>
+
+      <div id="apu"><div class="spinner"></div></div>
+      <div id="apr" style="display:none"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+════════════════════════════════════════════ -->
+<nav id="mobile-nav" style="display:none">
+  <div class="mnav-inner">
+    <button class="mnb active" data-v="partidos" onclick="Router.go('partidos')">
+      <span class="mico">⚽</span> Fixture
+    </button>
+    <button class="mnb" data-v="ranking" onclick="Router.go('ranking')">
+      <span class="mico">📊</span> Ranking
+    </button>
+    <button class="mnb" data-v="selecciones" onclick="Router.go('selecciones')">
+      <span class="mico">🏳️</span> Equipos
+    </button>
+    <button class="mnb" data-v="perfil" onclick="Router.go('perfil')">
+      <span class="mico">👤</span> Perfil
+    </button>
+    <button class="mnb admin-nav-item" data-v="admin" onclick="Router.go('admin')" style="display:none">
+      <span class="mico">🛡️</span> Admin
+    </button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════
+     FAB — Guardar predicciones
+════════════════════════════════════════════ -->
+<button id="fab" onclick="Fab.saveAll()">
+  💾 Guardar predicciones <span class="fabn" id="fabn">0</span>
+</button>
+
+<!-- ════════════════════════════════════════════
+     TOASTS
+════════════════════════════════════════════ -->
+<div id="toasts"></div>
+
+<!-- ════════════════════════════════════════════
+     MODALES
+════════════════════════════════════════════ -->
+
+<!-- Modal: Reset de contraseña (admin) -->
+<div class="moverlay" id="modal-reset">
+  <div class="mbox">
+    <div class="mtitle">Resetear contraseña</div>
+    <div class="msub" id="mresub">Nueva contraseña para el usuario</div>
+    <div class="field">
+      <label>Nueva contraseña</label>
+      <input type="text" id="mpass" placeholder="Mínimo 6 caracteres"
+             onkeydown="if(event.key==='Enter') Views.Admin.confirmReset()" />
+    </div>
+    <div class="mact">
+      <button class="btncancel" onclick="Modal.close()">Cancelar</button>
+      <button class="btn-p" style="flex:1;margin-top:0" onclick="Views.Admin.confirmReset()">
+        Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Dashboard de usuario (admin) -->
+<div class="moverlay" id="modal-dashboard">
+  <div class="mbox wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div class="mtitle" id="mdash-title">—</div>
+        <div class="msub" style="margin-bottom:0">Predicciones y estadísticas</div>
+      </div>
+      <button class="btncancel" style="flex:none;width:auto;padding:7px 14px"
+              onclick="Modal.close()">✕ Cerrar</button>
+    </div>
+    <div id="mdash-body"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- Modal: Detalle de selección -->
+<div class="moverlay" id="modal-sel-detail">
+  <div class="mbox wide">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btncancel" style="flex:none;width:auto;padding:7px 14px"
+              onclick="Modal.close()">✕ Cerrar</button>
+    </div>
+    <div id="sel-detail-content"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════ -->
+<script src="js/api.js"></script>
+<script src="js/store.js"></script>
+<script src="js/views.js"></script>
+<script>
+  /* ── Arranque de la app ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    if (State.token && State.user) {
+      Auth.boot();
+    }
+  });
+</script>
+
+</body>
+</html>
