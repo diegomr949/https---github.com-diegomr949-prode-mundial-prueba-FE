@@ -11,6 +11,7 @@ const Views = {
       case 'partidos':    Views.Partidos.load();           break;
       case 'ranking':     Views.Ranking.load();            break;
       case 'selecciones': Views.Selecciones.load();        break;
+      case 'reglamento':  Views.Reglamento.load();         break;
       case 'perfil':      Views.Perfil.load();             break;
       case 'admin':       Views.Admin.load();              break;
     }
@@ -50,15 +51,16 @@ const Views = {
     async doReg() {
       const nombre = document.getElementById('rn').value.trim();
       const email  = document.getElementById('re').value.trim();
+      const area   = document.getElementById('ra').value.trim();
       const pass   = document.getElementById('rp').value;
 
-      if (!nombre || !email || !pass) return Toast.err('Completá todos los campos');
+      if (!nombre || !email || !pass) return Toast.err('Completá todos los campos obligatorios');
       if (pass.length < 6) return Toast.err('La contraseña debe tener al menos 6 caracteres');
 
       const btn = document.getElementById('br');
       btn.disabled = true; btn.textContent = 'Creando cuenta...';
 
-      const r = await ApiAuth.registro(nombre, email, pass);
+      const r = await ApiAuth.registro(nombre, email, pass, area || null);
       btn.disabled = false; btn.textContent = 'Crear cuenta';
 
       if (!r?.ok) return Toast.err(r?.data?.error || 'Error al registrarse');
@@ -66,6 +68,359 @@ const Views = {
       Toast.ok('¡Cuenta creada! Bienvenido/a 🎉');
       Auth.saveSession(r.data);
       Auth.boot();
+    },
+  },
+
+  /* ═══════════════════════════════════════════════
+     REGLAMENTO
+  ═══════════════════════════════════════════════ */
+  Reglamento: {
+    load() {
+      const out = document.getElementById('reglamento-content');
+      if (!out) return;
+      out.innerHTML = Views.Reglamento.html();
+    },
+
+    html() {
+      return `
+        <!-- ══ HERO ══ -->
+        <div style="background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);
+                    border-radius:var(--rl);padding:32px 36px;margin-bottom:24px;
+                    display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+          <div style="font-size:56px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))">🏆</div>
+          <div>
+            <div style="font-family:var(--disp);font-size:clamp(24px,4vw,36px);
+                        font-weight:800;color:#fff;letter-spacing:.5px;line-height:1">
+              PRODE MUNDIAL 2026
+            </div>
+            <div style="font-size:14px;color:rgba(255,255,255,.7);margin-top:6px">
+              Reglamento oficial · Consejo Profesional de Ciencias Económicas de Mendoza
+            </div>
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+              <span style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;
+                           font-weight:600;padding:4px 12px;border-radius:20px;
+                           border:1px solid rgba(255,255,255,.25)">
+                📅 Junio – Julio 2026
+              </span>
+              <span style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;
+                           font-weight:600;padding:4px 12px;border-radius:20px;
+                           border:1px solid rgba(255,255,255,.25)">
+                🏟️ 48 selecciones · 12 grupos
+              </span>
+              <span style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;
+                           font-weight:600;padding:4px 12px;border-radius:20px;
+                           border:1px solid rgba(255,255,255,.25)">
+                🎯 Uso interno CPCE Mendoza
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ PUNTUACIÓN — la sección más importante ══ -->
+        <div style="background:var(--white);border:1px solid var(--border);
+                    border-radius:var(--rl);overflow:hidden;
+                    box-shadow:var(--shm);margin-bottom:20px">
+          <div style="background:var(--navy);padding:16px 24px;
+                      display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🎯</span>
+            <span style="font-family:var(--disp);font-size:20px;font-weight:800;
+                         color:#fff;letter-spacing:.5px">SISTEMA DE PUNTUACIÓN</span>
+          </div>
+          <div style="padding:20px 24px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+                        gap:14px;margin-bottom:20px">
+
+              <!-- 3 pts -->
+              <div style="background:var(--abg);border:2px solid #f0c060;
+                          border-radius:var(--r);padding:20px;text-align:center">
+                <div style="font-family:var(--disp);font-size:52px;font-weight:800;
+                             color:var(--amber);line-height:1">3</div>
+                <div style="font-size:13px;font-weight:700;color:var(--amber);
+                             text-transform:uppercase;letter-spacing:1px;margin-top:2px">
+                  PUNTOS
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);
+                             margin-top:10px">Resultado exacto</div>
+                <div style="font-size:12px;color:var(--tmut);margin-top:4px;line-height:1.4">
+                  Acertás los goles exactos de ambos equipos
+                </div>
+                <div style="margin-top:10px;background:var(--white);border-radius:6px;
+                             padding:6px 10px;font-size:12px;color:var(--tmid);
+                             border:1px solid #f0c060">
+                  Ej: predecís <strong>2-1</strong> y termina <strong>2-1</strong>
+                </div>
+              </div>
+
+              <!-- 1 pt -->
+              <div style="background:var(--light);border:2px solid #a0c0e8;
+                          border-radius:var(--r);padding:20px;text-align:center">
+                <div style="font-family:var(--disp);font-size:52px;font-weight:800;
+                             color:var(--blue);line-height:1">1</div>
+                <div style="font-size:13px;font-weight:700;color:var(--blue);
+                             text-transform:uppercase;letter-spacing:1px;margin-top:2px">
+                  PUNTO
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);
+                             margin-top:10px">Tendencia correcta</div>
+                <div style="font-size:12px;color:var(--tmut);margin-top:4px;line-height:1.4">
+                  Acertás quién gana o que hay empate, pero no los goles exactos
+                </div>
+                <div style="margin-top:10px;background:var(--white);border-radius:6px;
+                             padding:6px 10px;font-size:12px;color:var(--tmid);
+                             border:1px solid #a0c0e8">
+                  Ej: predecís <strong>2-0</strong> y termina <strong>1-0</strong>
+                </div>
+              </div>
+
+              <!-- 0 pts -->
+              <div style="background:var(--rbg);border:2px solid #f0a0a0;
+                          border-radius:var(--r);padding:20px;text-align:center">
+                <div style="font-family:var(--disp);font-size:52px;font-weight:800;
+                             color:var(--red);line-height:1">0</div>
+                <div style="font-size:13px;font-weight:700;color:var(--red);
+                             text-transform:uppercase;letter-spacing:1px;margin-top:2px">
+                  PUNTOS
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);
+                             margin-top:10px">Sin acierto</div>
+                <div style="font-size:12px;color:var(--tmut);margin-top:4px;line-height:1.4">
+                  No acertás ni el resultado ni quién gana o empata
+                </div>
+                <div style="margin-top:10px;background:var(--white);border-radius:6px;
+                             padding:6px 10px;font-size:12px;color:var(--tmid);
+                             border:1px solid #f0a0a0">
+                  Ej: predecís <strong>2-0</strong> y termina <strong>0-1</strong>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Tabla de ejemplos -->
+            <div style="background:var(--bg);border-radius:var(--r);overflow:hidden;
+                        border:1px solid var(--border)">
+              <div style="padding:10px 16px;border-bottom:1px solid var(--border);
+                          font-size:12px;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.8px;color:var(--tmut)">
+                📊 Ejemplos de puntuación
+              </div>
+              <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead>
+                  <tr style="background:var(--white)">
+                    <th style="padding:10px 14px;text-align:left;color:var(--tmid);
+                                font-weight:600;border-bottom:1px solid var(--border)">Resultado real</th>
+                    <th style="padding:10px 14px;text-align:left;color:var(--tmid);
+                                font-weight:600;border-bottom:1px solid var(--border)">Tu predicción</th>
+                    <th style="padding:10px 14px;text-align:center;color:var(--tmid);
+                                font-weight:600;border-bottom:1px solid var(--border)">Puntos</th>
+                    <th style="padding:10px 14px;text-align:left;color:var(--tmid);
+                                font-weight:600;border-bottom:1px solid var(--border)">Motivo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${[
+                    ['2 – 1','2 – 1','🎯 3','Resultado exacto — ¡pleno!'],
+                    ['3 – 0','1 – 0','👍 1','Acertaste que ganaba el local'],
+                    ['1 – 1','2 – 2','👍 1','Acertaste el empate'],
+                    ['0 – 0','0 – 0','🎯 3','Empate exacto — ¡pleno!'],
+                    ['1 – 2','2 – 0','❌ 0','Predijiste local, ganó visitante'],
+                    ['0 – 1','1 – 1','❌ 0','Predijiste empate, ganó visitante'],
+                  ].map(([r, p, pts, m], i) => `
+                    <tr style="background:${i % 2 === 0 ? 'var(--white)' : 'var(--bg)'}">
+                      <td style="padding:9px 14px;font-weight:700;color:var(--navy)">${r}</td>
+                      <td style="padding:9px 14px;color:var(--tmid)">${p}</td>
+                      <td style="padding:9px 14px;text-align:center;font-weight:700">${pts}</td>
+                      <td style="padding:9px 14px;color:var(--tmut);font-size:12px">${m}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECCIONES EN GRID ══ -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+                    gap:16px;margin-bottom:20px">
+
+          <!-- Participación -->
+          <div style="background:var(--white);border:1px solid var(--border);
+                      border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden">
+            <div style="background:var(--cpce-blue,var(--blue));padding:14px 20px;
+                        display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">👥</span>
+              <span style="font-family:var(--disp);font-size:17px;font-weight:800;
+                           color:#fff;letter-spacing:.3px">PARTICIPACIÓN</span>
+            </div>
+            <div style="padding:18px 20px">
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                ${[
+                  ['✅','Puede participar todo el personal matriculado y colaboradores del CPCE Mendoza.'],
+                  ['✅','El registro es gratuito y de uso exclusivo interno.'],
+                  ['✅','Cada participante tiene una cuenta individual e intransferible.'],
+                  ['✅','La participación es voluntaria.'],
+                  ['⚠️','Queda prohibido compartir o ceder el acceso a la cuenta a otra persona.'],
+                ].map(([ico, txt]) => `
+                  <li style="display:flex;gap:10px;font-size:13px;line-height:1.5;
+                              color:var(--tmid)">
+                    <span style="flex-shrink:0;margin-top:1px">${ico}</span>
+                    <span>${txt}</span>
+                  </li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Predicciones -->
+          <div style="background:var(--white);border:1px solid var(--border);
+                      border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden">
+            <div style="background:var(--green);padding:14px 20px;
+                        display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">⚽</span>
+              <span style="font-family:var(--disp);font-size:17px;font-weight:800;
+                           color:#fff;letter-spacing:.3px">PREDICCIONES</span>
+            </div>
+            <div style="padding:18px 20px">
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                ${[
+                  ['📝','Se pronostica el marcador exacto (goles de cada equipo) de cada partido.'],
+                  ['🔓','Las predicciones están abiertas desde que el partido aparece en el fixture.'],
+                  ['🔒','Las predicciones se cierran automáticamente <strong>15 minutos antes</strong> del inicio del partido.'],
+                  ['✏️','Podés modificar tu predicción todas las veces que quieras hasta el cierre.'],
+                  ['🚫','Una vez cerrado el partido no se puede cargar ni modificar ningún pronóstico.'],
+                  ['0️⃣','Los partidos sin predicción cargada otorgan 0 puntos automáticamente.'],
+                ].map(([ico, txt]) => `
+                  <li style="display:flex;gap:10px;font-size:13px;line-height:1.5;
+                              color:var(--tmid)">
+                    <span style="flex-shrink:0;margin-top:1px">${ico}</span>
+                    <span>${txt}</span>
+                  </li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Ranking y desempates -->
+          <div style="background:var(--white);border:1px solid var(--border);
+                      border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden">
+            <div style="background:var(--amber);padding:14px 20px;
+                        display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">🏅</span>
+              <span style="font-family:var(--disp);font-size:17px;font-weight:800;
+                           color:#fff;letter-spacing:.3px">RANKING Y DESEMPATES</span>
+            </div>
+            <div style="padding:18px 20px">
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                ${[
+                  ['📊','La tabla de posiciones se actualiza automáticamente al cargar cada resultado.'],
+                  ['🌐','Existe un ranking general y rankings por área/sector del Consejo.'],
+                  ['1️⃣','<strong>Primer criterio de desempate:</strong> mayor cantidad de plenos (resultados exactos).'],
+                  ['2️⃣','<strong>Segundo criterio de desempate:</strong> fecha de registro más antigua en el sistema.'],
+                  ['👁️','Todos los participantes pueden ver el ranking completo en tiempo real.'],
+                ].map(([ico, txt]) => `
+                  <li style="display:flex;gap:10px;font-size:13px;line-height:1.5;
+                              color:var(--tmid)">
+                    <span style="flex-shrink:0;margin-top:1px">${ico}</span>
+                    <span>${txt}</span>
+                  </li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Resultados y transparencia -->
+          <div style="background:var(--white);border:1px solid var(--border);
+                      border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden">
+            <div style="background:#6b21a8;padding:14px 20px;
+                        display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">🔍</span>
+              <span style="font-family:var(--disp);font-size:17px;font-weight:800;
+                           color:#fff;letter-spacing:.3px">TRANSPARENCIA</span>
+            </div>
+            <div style="padding:18px 20px">
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                ${[
+                  ['📡','Los resultados reales los carga únicamente el administrador del sistema.'],
+                  ['⚡','El cálculo de puntos es automático e inmediato al cargar el resultado.'],
+                  ['👀','Una vez iniciado el partido, cualquier participante puede ver los pronósticos de todos.'],
+                  ['🔐','Las predicciones son privadas hasta el inicio del partido para garantizar la equidad.'],
+                  ['⚠️','Ante errores de carga, el administrador puede corregir un resultado. El sistema recalcula los puntos automáticamente.'],
+                ].map(([ico, txt]) => `
+                  <li style="display:flex;gap:10px;font-size:13px;line-height:1.5;
+                              color:var(--tmid)">
+                    <span style="flex-shrink:0;margin-top:1px">${ico}</span>
+                    <span>${txt}</span>
+                  </li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Fases del torneo -->
+          <div style="background:var(--white);border:1px solid var(--border);
+                      border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden">
+            <div style="background:#0f766e;padding:14px 20px;
+                        display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">🗓️</span>
+              <span style="font-family:var(--disp);font-size:17px;font-weight:800;
+                           color:#fff;letter-spacing:.3px">FASES DEL TORNEO</span>
+            </div>
+            <div style="padding:18px 20px">
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                ${[
+                  ['⚽','<strong>Fase de grupos:</strong> 48 partidos, 12 grupos de 4 equipos. Los 2 primeros de cada grupo avanzan más 8 mejores terceros.'],
+                  ['⚽','<strong>Ronda de 32:</strong> 32 equipos clasificados.'],
+                  ['⚽','<strong>Octavos, cuartos, semifinales y final</strong> completan el torneo.'],
+                  ['📋','Las predicciones de cada fase se habilitarán a medida que avance el Mundial.'],
+                  ['🏆','El sistema acumula puntos de <strong>todas las fases</strong> del torneo.'],
+                ].map(([ico, txt]) => `
+                  <li style="display:flex;gap:10px;font-size:13px;line-height:1.5;
+                              color:var(--tmid)">
+                    <span style="flex-shrink:0;margin-top:1px">${ico}</span>
+                    <span>${txt}</span>
+                  </li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Soporte -->
+          <div style="background:var(--white);border:1px solid var(--border);
+                      border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden">
+            <div style="background:var(--navy);padding:14px 20px;
+                        display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">🛠️</span>
+              <span style="font-family:var(--disp);font-size:17px;font-weight:800;
+                           color:#fff;letter-spacing:.3px">SOPORTE Y CONTACTO</span>
+            </div>
+            <div style="padding:18px 20px">
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                ${[
+                  ['🔑','¿Olvidaste tu contraseña? Contactá al administrador del sistema para que te la resetee.'],
+                  ['✏️','¿Querés cambiar tu contraseña? Podés hacerlo desde <strong>Mi Perfil → Cambiar contraseña</strong>.'],
+                  ['🏢','¿Tu área no está asignada? Consultá al administrador para que te la agregue.'],
+                  ['🐛','¿Encontraste un error en un resultado? Notificalo inmediatamente al administrador.'],
+                  ['📱','El sistema funciona desde cualquier dispositivo con navegador web.'],
+                ].map(([ico, txt]) => `
+                  <li style="display:flex;gap:10px;font-size:13px;line-height:1.5;
+                              color:var(--tmid)">
+                    <span style="flex-shrink:0;margin-top:1px">${ico}</span>
+                    <span>${txt}</span>
+                  </li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══ NOTA FINAL ══ -->
+        <div style="background:var(--light);border:1px solid var(--bstrong);
+                    border-radius:var(--r);padding:16px 20px;
+                    display:flex;gap:12px;align-items:flex-start">
+          <span style="font-size:20px;flex-shrink:0">ℹ️</span>
+          <div style="font-size:13px;color:var(--tmid);line-height:1.6">
+            <strong style="color:var(--navy)">Nota:</strong>
+            Este Prode es una actividad recreativa interna del Consejo Profesional de Ciencias Económicas de Mendoza.
+            No tiene fines económicos ni constituye apuesta de ningún tipo.
+            La participación implica la aceptación de este reglamento.
+            El CPCE se reserva el derecho de realizar modificaciones al reglamento en caso de ser necesario,
+            comunicándolo oportunamente a los participantes.
+          </div>
+        </div>
+      `;
     },
   },
 
@@ -251,17 +606,38 @@ const Views = {
   Ranking: {
     async load() {
       document.getElementById('rout').innerHTML = '<div class="spinner"></div>';
-      const r = await ApiRanking.get();
+
+      // Cargar áreas para el selector (en paralelo con el ranking)
+      const [r, rAreas] = await Promise.all([
+        ApiRanking.get(),
+        ApiRanking.getAreas(),
+      ]);
+
       if (!r?.ok) return Toast.err('Error al cargar el ranking');
 
       State.ranking = r.data || [];
 
-      // Actualizar mi posición en las stats del fixture
+      // Poblar el select de áreas
+      const sel = document.getElementById('ranking-area-filter');
+      if (sel && rAreas?.ok && rAreas.data?.length) {
+        // Mantener la opción "Todas las áreas" y agregar las demás
+        sel.innerHTML = '<option value="">🌐 Todas las áreas</option>' +
+          rAreas.data.map(a => `<option value="${XSS.s(a)}">${XSS.s(a)}</option>`).join('');
+      }
+
+      // Actualizar posición del usuario en stats
       const mio = State.ranking.find(u => u.email === State.user?.email);
       const posEl = document.getElementById('spos');
       if (posEl) posEl.textContent = mio ? `#${mio.posicion}` : '—';
 
       Views.Ranking.render(State.ranking);
+    },
+
+    async filtrarPorArea(area) {
+      document.getElementById('rout').innerHTML = '<div class="spinner"></div>';
+      const r = await ApiRanking.get(area || null);
+      if (!r?.ok) return Toast.err('Error al filtrar el ranking');
+      Views.Ranking.render(r.data || []);
     },
 
     render(data) {
@@ -277,10 +653,11 @@ const Views = {
           <td><div class="rpos">${Fmt.posicion(u.posicion)}</div></td>
           <td>
             <div class="rname">
-              ${u.nombre}
+              ${XSS.s(u.nombre)}
               ${u.email === myEmail ? '<span class="metag">vos</span>' : ''}
             </div>
-            <div class="remail">${u.email}</div>
+            <div class="remail">${XSS.s(u.email)}</div>
+            ${u.area ? `<div style="font-size:11px;color:var(--blue);margin-top:2px;font-weight:500">🏢 ${XSS.s(u.area)}</div>` : ''}
           </td>
           <td><span class="rpts">${u.puntosTotales}</span></td>
           <td><strong>${u.plenosTotales}</strong></td>
@@ -673,12 +1050,15 @@ const Views = {
         <div class="perfil-header">
           <div class="perfil-av">${Fmt.iniciales(user.nombre)}</div>
           <div class="perfil-info">
-            <h2>${user.nombre}</h2>
-            <p>${user.email}</p>
-            <p style="margin-top:4px">
+            <h2>${XSS.s(user.nombre)}</h2>
+            <p>${XSS.s(user.email)}</p>
+            <p style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="ucrole ${user.rol === 'ROLE_ADMIN' ? 'radm' : 'rusr'}">
                 ${user.rol === 'ROLE_ADMIN' ? 'Administrador' : 'Participante'}
               </span>
+              ${user.area
+                ? `<span style="font-size:12px;color:var(--blue);font-weight:600">🏢 ${XSS.s(user.area)}</span>`
+                : `<span style="font-size:12px;color:var(--tmut)">Sin área asignada — pedísela al admin</span>`}
             </p>
           </div>
           <div class="perfil-badge">
@@ -832,13 +1212,20 @@ const Views = {
     userCardHTML(u) {
       const ini  = Fmt.iniciales(u.nombre);
       const adm  = u.rol === 'ROLE_ADMIN';
+      const area = u.area ? XSS.s(u.area) : null;
+      const nom  = XSS.s(u.nombre);
+      const nomJ = nom.replace(/'/g, "\\'");
+      const areaJ = (area || '').replace(/'/g, "\\'");
       return `
         <div class="ucard">
           <div class="uchead">
             <div class="ucav">${ini}</div>
             <div>
-              <div class="ucname">${u.nombre}</div>
-              <div class="ucemail">${u.email}</div>
+              <div class="ucname">${nom}</div>
+              <div class="ucemail">${XSS.s(u.email)}</div>
+              ${area
+                ? `<div style="font-size:11px;color:var(--blue);font-weight:500;margin-top:2px">🏢 ${area}</div>`
+                : `<div style="font-size:11px;color:var(--tmut);margin-top:2px">Sin área asignada</div>`}
             </div>
             <span class="ucrole ${adm ? 'radm' : 'rusr'}">${adm ? 'Admin' : 'Usuario'}</span>
           </div>
@@ -849,17 +1236,20 @@ const Views = {
             <div><div class="usv">${u.partidosPendientes}</div><div class="usl">Pend.</div></div>
           </div>
           <div class="ucact">
-            <button class="btnsm" onclick="Views.Admin.openReset(${u.id},'${u.nombre.replace(/'/g,"\\'")}')">
+            <button class="btnsm" onclick="Views.Admin.openReset(${u.id},'${nomJ}')">
               🔑 Reset contraseña
             </button>
-            <button class="btnsm" onclick="Views.Admin.verDashboard(${u.id},'${u.nombre.replace(/'/g,"\\'")}')">
+            <button class="btnsm" onclick="Views.Admin.openArea(${u.id},'${nomJ}','${areaJ}')">
+              🏢 ${area ? 'Cambiar área' : 'Asignar área'}
+            </button>
+            <button class="btnsm" onclick="Views.Admin.verDashboard(${u.id},'${nomJ}')">
               👁 Ver predicciones
             </button>
           </div>
         </div>`;
     },
 
-    openReset(id, nombre) {
+        openReset(id, nombre) {
       State.resetId = id;
       document.getElementById('mresub').textContent = `Nueva contraseña para: ${nombre}`;
       document.getElementById('mpass').value = '';
@@ -873,6 +1263,26 @@ const Views = {
       if (!r?.ok) return Toast.err('Error al resetear contraseña');
       Modal.close();
       Toast.ok('✅ Contraseña actualizada correctamente');
+    },
+
+    openArea(id, nombre, areaActual) {
+      State.areaId = id;
+      document.getElementById('marea-sub').textContent =
+        `Área o sector para: ${nombre}`;
+      document.getElementById('marea-input').value = areaActual || '';
+      Modal.open('modal-area');
+      // Foco automático en el input
+      setTimeout(() => document.getElementById('marea-input').focus(), 100);
+    },
+
+    async confirmArea() {
+      const area = document.getElementById('marea-input').value.trim();
+      const r = await ApiAdmin.actualizarArea(State.areaId, area || null);
+      if (!r?.ok) return Toast.err('Error al actualizar el área');
+      Modal.close();
+      Toast.ok(`✅ Área ${area ? `"${area}" asignada` : 'removida'} correctamente`);
+      // Refrescar la lista de usuarios
+      Views.Admin.loadUsuarios();
     },
 
     /* ── Dashboard de usuario individual ── */

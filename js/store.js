@@ -64,7 +64,7 @@ const Store = {
   setUser(user) {
     try {
       // Guardar solo lo necesario — nunca el passwordHash
-      const safe = { nombre: user.nombre, email: user.email, rol: user.rol };
+      const safe = { nombre: user.nombre, email: user.email, rol: user.rol, area: user.area || null };
       sessionStorage.setItem('prode_usr', JSON.stringify(safe));
     } catch {}
   },
@@ -104,6 +104,7 @@ const State = {
   equipos:    [],
   filter:     'todos',
   resetId:    null,
+  areaId:     null,   // id del usuario al que se le está asignando área
   viewStack:  [],
 
   get user()    { return Store.getUser(); },
@@ -145,7 +146,7 @@ document.addEventListener('click', e => {
 const Router = {
   current: null,
   // Vistas permitidas — whitelist para evitar navegación a vistas arbitrarias
-  VIEWS: ['partidos', 'ranking', 'selecciones', 'perfil', 'admin'],
+  VIEWS: ['partidos', 'ranking', 'selecciones', 'reglamento', 'perfil', 'admin'],
 
   go(name, params = {}) {
     if (!Router.VIEWS.includes(name)) return; // bloquear navegación inválida
@@ -169,7 +170,7 @@ const Router = {
 const Auth = {
   saveSession(data) {
     Store.setToken(data.token);
-    Store.setUser({ nombre: data.nombre, email: data.email, rol: data.rol });
+    Store.setUser({ nombre: data.nombre, email: data.email, rol: data.rol, area: data.area || null });
   },
 
   logout() {

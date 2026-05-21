@@ -62,8 +62,8 @@ async function http(path, method = 'GET', body = null) {
 
 /* ── Módulos ── */
 const ApiAuth = {
-  login:    (email, pass)              => http('/auth/login', 'POST', { email, password: pass }),
-  registro: (nombre, email, pass)      => http('/auth/registro', 'POST', { nombre, email, password: pass }),
+  login:    (email, pass)                    => http('/auth/login', 'POST', { email, password: pass }),
+  registro: (nombre, email, pass, area)      => http('/auth/registro', 'POST', { nombre, email, password: pass, area: area || null }),
 };
 
 const ApiPartidos = {
@@ -81,7 +81,10 @@ const ApiPredicciones = {
   },
 };
 
-const ApiRanking  = { get: () => http('/ranking') };
+const ApiRanking  = {
+  get:              (area = null) => http('/ranking' + (area ? `?area=${encodeURIComponent(area)}` : '')),
+  getAreas:         ()            => http('/ranking/areas'),
+};
 
 const ApiEquipos  = {
   getAll:       ()  => http('/equipos'),
@@ -89,11 +92,15 @@ const ApiEquipos  = {
 };
 
 const ApiAdmin = {
-  getUsuarios:       ()        => http('/admin/usuarios'),
-  getDashboard:      (id)      => Number.isInteger(id) && id > 0 ? http(`/admin/usuarios/${id}/dashboard`) : null,
-  resetPassword:     (id, p)   => (Number.isInteger(id) && p?.length >= 6)
-                                    ? http(`/admin/usuarios/${id}/reset-password`, 'PUT', { nuevaPassword: p })
-                                    : null,
+  getUsuarios:       ()           => http('/admin/usuarios'),
+  getDashboard:      (id)         => Number.isInteger(id) && id > 0 ? http(`/admin/usuarios/${id}/dashboard`) : null,
+  resetPassword:     (id, p)      => (Number.isInteger(id) && p?.length >= 6)
+                                       ? http(`/admin/usuarios/${id}/reset-password`, 'PUT', { nuevaPassword: p })
+                                       : null,
+  actualizarArea:    (id, area)   => Number.isInteger(id) && id > 0
+                                       ? http(`/admin/usuarios/${id}/area`, 'PUT', { area: area || null })
+                                       : null,
+  getAreas:          ()           => http('/admin/areas'),
   cargarResultado:   (pid, gl, gv) => http(`/admin/partidos/${pid}/resultado`, 'PUT', { golesLocal: gl, golesVisitante: gv }),
 };
 

@@ -16,7 +16,7 @@
     Producción:  https://prode-mundial.onrender.com/api
     ════════════════════════════════════════════════════════
   -->
-  <meta name="api-base" content="http://localhost:8080/api" />
+  <meta name="api-base" content="https://prode-mundial-prueba.onrender.com" />
 
   <!--
     Content Security Policy — segunda línea de defensa contra XSS.
@@ -45,7 +45,7 @@
 <!-- ════════════════════════════════════════════
      LOGIN
 ════════════════════════════════════════════ -->
-<div id="view-login" class="view active" style="display:none">
+<div id="view-login" class="view active" style="display:flex">
   <div class="lcard">
     <div class="lhead">
       <img src="https://cpcemza.org.ar/img/logo.png" alt="CPCE Mendoza"
@@ -84,6 +84,10 @@
           <input type="email" id="re" placeholder="usuario@cpce.org.ar" />
         </div>
         <div class="field">
+          <label>Área / Sector</label>
+          <input type="text" id="ra" placeholder="Ej: Contabilidad, Legales, Sistemas..." />
+        </div>
+        <div class="field">
           <label>Contraseña (mín. 6 caracteres)</label>
           <input type="password" id="rp" placeholder="••••••••"
                  onkeydown="if(event.key==='Enter') Views.Auth.doReg()" />
@@ -91,14 +95,14 @@
         <button class="btn-p" id="br" onclick="Views.Auth.doReg()">Crear cuenta</button>
       </div>
     </div>
-    <div class="lfoot">Uso exclusivo para matriculados y personal del CPCE Mendoza</div>
+    <div class="lfoot">Uso exclusivo para personal del CPCE Mendoza</div>
   </div>
 </div>
 
 <!-- ════════════════════════════════════════════
      TOPBAR (desktop)
 ════════════════════════════════════════════ -->
-<header id="topbar" style="display:flex">
+<header id="topbar" style="display:none">
   <a class="tb-logo" href="#" onclick="Router.go('partidos'); return false">
     <img src="https://cpcemza.org.ar/img/logo.png" alt="CPCE Mendoza"
          onerror="this.style.display='none'" />
@@ -118,6 +122,9 @@
     </button>
     <button class="nb" data-v="selecciones" onclick="Router.go('selecciones')">
       🏳️ Selecciones
+    </button>
+    <button class="nb" data-v="reglamento" onclick="Router.go('reglamento')">
+      📋 Reglamento
     </button>
     <button class="nb" data-v="perfil" onclick="Router.go('perfil')">
       👤 Mi perfil
@@ -142,7 +149,7 @@
 <!-- ════════════════════════════════════════════
      MAIN CONTENT
 ════════════════════════════════════════════ -->
-<main id="main" style="display:block">
+<main id="main" style="display:none">
 
   <!-- ── FIXTURE ── -->
   <div id="view-partidos" class="view">
@@ -205,7 +212,17 @@
           <div class="ptitle">Tabla de <span class="ac">Posiciones</span></div>
           <div class="psub">Clasificación general — CPCE Mendoza · Prode Mundial 2026</div>
         </div>
-        <button class="tab active" onclick="Views.Ranking.load()">↻ Actualizar</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- Filtro por área — se llena dinámicamente con las áreas del sistema -->
+          <select id="ranking-area-filter"
+                  onchange="Views.Ranking.filtrarPorArea(this.value)"
+                  style="padding:6px 12px;border-radius:6px;border:1.5px solid var(--bstrong);
+                         background:var(--white);font-family:var(--ui);font-size:13px;
+                         color:var(--tmid);cursor:pointer;outline:none">
+            <option value="">🌐 Todas las áreas</option>
+          </select>
+          <button class="tab active" onclick="Views.Ranking.load()">↻ Actualizar</button>
+        </div>
       </div>
       <div id="rout"><div class="spinner"></div></div>
     </div>
@@ -221,6 +238,19 @@
         </div>
       </div>
       <div id="sel-out"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── REGLAMENTO ── -->
+  <div id="view-reglamento" class="view">
+    <div class="wrap">
+      <div class="ph">
+        <div>
+          <div class="ptitle">📋 Reglamento <span class="ac">del Prode</span></div>
+          <div class="psub">Consejo Profesional de Ciencias Económicas de Mendoza · Mundial 2026</div>
+        </div>
+      </div>
+      <div id="reglamento-content"></div>
     </div>
   </div>
 
@@ -275,6 +305,9 @@
     <button class="mnb" data-v="ranking" onclick="Router.go('ranking')">
       <span class="mico">📊</span> Ranking
     </button>
+    <button class="mnb" data-v="reglamento" onclick="Router.go('reglamento')">
+      <span class="mico">📋</span> Reglas
+    </button>
     <button class="mnb" data-v="selecciones" onclick="Router.go('selecciones')">
       <span class="mico">🏳️</span> Equipos
     </button>
@@ -317,6 +350,26 @@
       <button class="btncancel" onclick="Modal.close()">Cancelar</button>
       <button class="btn-p" style="flex:1;margin-top:0" onclick="Views.Admin.confirmReset()">
         Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Asignar área (admin) -->
+<div class="moverlay" id="modal-area">
+  <div class="mbox">
+    <div class="mtitle">Asignar área</div>
+    <div class="msub" id="marea-sub">Área o sector del participante</div>
+    <div class="field">
+      <label>Área / Sector</label>
+      <input type="text" id="marea-input"
+             placeholder="Ej: Contabilidad, Legales, Sistemas..."
+             onkeydown="if(event.key==='Enter') Views.Admin.confirmArea()" />
+    </div>
+    <div class="mact">
+      <button class="btncancel" onclick="Modal.close()">Cancelar</button>
+      <button class="btn-p" style="flex:1;margin-top:0" onclick="Views.Admin.confirmArea()">
+        Guardar
       </button>
     </div>
   </div>
