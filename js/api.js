@@ -20,7 +20,7 @@ if (API_BASE && !API_BASE.startsWith('https://') && location.protocol === 'https
   console.error('[API] ⚠ El backend debe usar HTTPS en producción.');
 }
 
-const TIMEOUT_MS = 15_000;
+const TIMEOUT_MS = 30_000;
 
 /* ── HTTP helper ── */
 async function http(path, method = 'GET', body = null) {
